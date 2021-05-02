@@ -8,6 +8,7 @@
  *	code, is my own original work.
  */
 #include <avr/io.h>
+#include <avr/interrupt.h>
 #ifdef _SIMULATE_
 #include "simAVRHeader.h"
 #endif
@@ -52,7 +53,7 @@ void TimerISR() {
 }
 
 //In our approach, the C programmer does not touch this ISR, but rather TimerISR()
-void ISR(TIMER1_COMPA_vect){
+ISR(TIMER1_COMPA_vect){
 	//CPU automatically calls when TCNT1 == OCR1 (every 1ms per TimerOn settings)
 	_avr_timer_cntcurr--; // count down to 0 rather than up to TOP
 	if (_avr_timer_cntcurr == 0) { // results in a more efficient compare
