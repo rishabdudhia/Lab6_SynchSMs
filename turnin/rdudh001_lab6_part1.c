@@ -20,7 +20,7 @@ unsigned long _avr_timer_cntcurr = 0; //current internal count of 1ms ticks
 
 void TimerOn () {
 	//AVR timer/counter controller register TCCR1
-	TCRR1B = 0x0B; //bit3 = 0: CTC mode (clear timer on compare)
+	TCCR1B = 0x0B; //bit3 = 0: CTC mode (clear timer on compare)
 		       //bit2bit1bit0 = 011: pre-scaler / 64
 		       //00001011: 0x0B
 		       //so, 8 MHz clock or 8,000,000 / 64 = 125,000 ticks/s
@@ -73,7 +73,7 @@ enum SM_States {SM_Start, zero, one, two} state;
 void TickSM(){
 	switch(state) {
 		case SM_Start:
-			state = one;
+			state = zero;
 			break;
 		case zero:
 			state = one;
