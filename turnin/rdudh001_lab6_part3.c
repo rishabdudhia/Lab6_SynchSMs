@@ -6,6 +6,10 @@
  *	Lab 4 exercise 2 checking for press every 100ms
  *	I acknowledge all content contained herein, excluding template or example
  *	code, is my own original work.
+ *
+ *
+ *
+ *	Youtube Link: https://www.youtube.com/watch?v=zmgLNAqbEDg
  */
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -71,16 +75,17 @@ void TimerSet(unsigned long M){
 enum States {smstart, wait, inc, dec, inc_wait, dec_wait, reset_wait, reset } state;
 unsigned char cntA0;
 unsigned char cntA1;
-unsigned char waitA0;
-unsigned char waitA1;
 void TickSM()
 {
+    static unsigned char waitA0 = 0;
+    static unsigned char waitA1 = 0;
     unsigned char actualB = PINB ;
     //unsigned char tempC = PORTC & 0x03;
     switch(state)
     {
 	case smstart:
 	    state = wait;
+	    PORTB = 0x07;
 	    break;
 	case wait:
 	    if (((~PINA & 0x03) == 0x01) && (PORTB < 0x09))
@@ -107,7 +112,14 @@ void TickSM()
 	case inc_wait:
 	    if((~PINA & 0x03) == 0x01)
 	    {
-		state = inc_wait;
+		if (PORTB == 0x09){
+			state = wait;
+			break;
+		}
+		if (waitA0 > 10) 
+			state = inc;
+		else
+			state = inc_wait;
 	    }
 	    else if ((~PINA & 0x03) == 0x02)
 	    {
@@ -127,7 +139,14 @@ void TickSM()
 	case dec_wait:
 	    if ((~PINA & 0x03) == 0x02)
 	    {
-		state = dec_wait;
+		if (PORTB == 0x00){
+			state = wait;
+			break;
+		}
+		if (waitA1 > 10)
+			state = dec;
+		else
+			state = dec_wait; 
 	    }
 	    else if ((~PINA & 0x03) == 0x01)
 	    {
@@ -169,6 +188,7 @@ void TickSM()
     {
         case smstart:
 	    PORTB = 0x07;
+	    break;
         case wait:
 	    waitA0 = 0;
 	    waitA1 = 0;
@@ -176,23 +196,17 @@ void TickSM()
 	case reset_wait:
         case inc_wait:
 	    ++waitA0;
-	    if (waitA0 > 10)
-		    ++actualB;
-	    waitA0 = 0;
-	    PORTB = actualB;
 	    break;
         case dec_wait:
 	    ++waitA1;
-	    if (waitA1 > 10)
-		    --actualB;
-	    waitA1 = 0;
-	    PORTB = actualB;
 	    break;
         case inc:
+	    waitA0 = 1;
             actualB = actualB + 1;
 	    PORTB = actualB;
             break;
 	case dec:
+	    waitA1 = 1;
 	    actualB = actualB - 1;
 	    PORTB = actualB;
 	    break;
@@ -213,6 +227,7 @@ int main(void) {
     TimerSet (100);
     TimerOn();
     state = smstart;
+    
     //unsigned char tmpB = 0x00;
     /* Insert your solution below */
     while (1) {

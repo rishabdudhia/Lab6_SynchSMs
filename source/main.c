@@ -108,10 +108,14 @@ void TickSM()
 	case inc_wait:
 	    if((~PINA & 0x03) == 0x01)
 	    {
-		waitA0 = waitA0 + 1;
-		if (waitA0 > 10)
+		if (PORTB == 0x09){
+			state = wait;
+			break;
+		}
+		if (waitA0 > 10) 
 			state = inc;
-		state = inc_wait;
+		else
+			state = inc_wait;
 	    }
 	    else if ((~PINA & 0x03) == 0x02)
 	    {
@@ -131,10 +135,14 @@ void TickSM()
 	case dec_wait:
 	    if ((~PINA & 0x03) == 0x02)
 	    {
-		waitA1 = waitA1 + 1;
+		if (PORTB == 0x00){
+			state = wait;
+			break;
+		}
 		if (waitA1 > 10)
 			state = dec;
-		state = dec_wait; 
+		else
+			state = dec_wait; 
 	    }
 	    else if ((~PINA & 0x03) == 0x01)
 	    {
@@ -183,18 +191,10 @@ void TickSM()
 	    break;
 	case reset_wait:
         case inc_wait:
-	    //++waitA0;
-	    //if (waitA0 > 10)
-		    //++actualB;
-	    //waitA0 = 0;
-	    //PORTB = actualB;
+	    ++waitA0;
 	    break;
         case dec_wait:
-	    //++waitA1;
-	    //if (waitA1 > 10)
-		    //--actualB;
-	    //waitA1 = 0;
-	    //PORTB = actualB;
+	    ++waitA1;
 	    break;
         case inc:
 	    waitA0 = 1;
