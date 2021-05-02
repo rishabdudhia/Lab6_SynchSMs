@@ -6,6 +6,8 @@
  *	b0 then b1 then b2 each for one second
  *	I acknowledge all content contained herein, excluding template or example
  *	code, is my own original work.
+ *
+ *	Youtube link: https://www.youtube.com/watch?v=3i0nhznVjbY
  */
 #include <avr/io.h>
 #include <avr/interrupt.h>

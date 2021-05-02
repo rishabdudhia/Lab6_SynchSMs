@@ -6,6 +6,8 @@
  *	b0 then b1 then b2 each for 300ms; stop on whichever is on when button on A0 is pressed
  *	I acknowledge all content contained herein, excluding template or example
  *	code, is my own original work.
+ *
+ *	Youtube link: https://www.youtube.com/watch?v=eRJYjSdst2Q
  */
 #include <avr/io.h>
 #include <avr/interrupt.h>

@@ -1,9 +1,9 @@
 /*	Author: Rishab Dudhia
  *  Partner(s) Name: 
  *	Lab Section: 022
- *	Assignment: Lab #6  Exercise #1
+ *	Assignment: Lab #6  Exercise #3
  *	Exercise Description: [optional - include for your own benefit]
- *	b0 then b1 then b2 each for one second
+ *	Lab 4 exercise 2 checking for press every 100ms
  *	I acknowledge all content contained herein, excluding template or example
  *	code, is my own original work.
  */
@@ -68,50 +68,162 @@ void TimerSet(unsigned long M){
 	_avr_timer_cntcurr = _avr_timer_M;
 }
 
-enum SM_States {SM_Start, zero, one, two} state;
+enum States {smstart, wait, inc, dec, inc_wait, dec_wait, reset_wait, reset } state;
+unsigned char cntA0;
+unsigned char cntA1;
+void TickSM()
+{
+    static unsigned char waitA0 = 0;
+    static unsigned char waitA1 = 0;
+    unsigned char actualB = PINB ;
+    //unsigned char tempC = PORTC & 0x03;
+    switch(state)
+    {
+	case smstart:
+	    state = wait;
+	    PORTB = 0x07;
+	    break;
+	case wait:
+	    if (((~PINA & 0x03) == 0x01) && (PORTB < 0x09))
+	    {
+		state = inc;
+	    	cntA0 = cntA0 + 1;
+	    }
+	    else if (((~PINA & 0x03) == 0x02) && (PORTB > 0x00))
+	    {
+		state = dec;
+	        cntA1 = cntA1 + 1;
+	    }
+	    /*else if ((PINA & 0x03) == 0x03)
+	    {
+		    state = reset;
+	    	    cntA0 = cntA0 + 1;
+		    cntA1 = cntA1 + 1;
+	    }*/
+	    else
+	    {
+		state = wait;
+	    }
+	    break;
+	case inc_wait:
+	    if((~PINA & 0x03) == 0x01)
+	    {
+		waitA0 = waitA0 + 1;
+		if (waitA0 > 10)
+			state = inc;
+		state = inc_wait;
+	    }
+	    else if ((~PINA & 0x03) == 0x02)
+	    {
+		state = dec;
+		cntA1 = cntA1 + 1;
+	    }
+	    else if ((~PINA & 0x03) == 0x03)
+	    {
+		cntA1 = cntA1 + 1;
+		state = reset;
+	    }
+	    else
+	    {
+		state = wait;
+	    }
+	    break;
+	case dec_wait:
+	    if ((~PINA & 0x03) == 0x02)
+	    {
+		waitA1 = waitA1 + 1;
+		if (waitA1 > 10)
+			state = dec;
+		state = dec_wait; 
+	    }
+	    else if ((~PINA & 0x03) == 0x01)
+	    {
+		state = inc;
+		cntA0 = cntA0 + 1;
+	    }
+	    else if ((~PINA & 0x03) == 0x03)
+	    {
+		cntA0 = cntA0 + 1;
+		state = reset;
+	    }
+	    else
+	    {
+		state = wait;
+	    }
+	    break;
+	case reset_wait:
+	    if ((~PINA & 0x03) == 0x00)
+		    state = wait;
+	    else
+		    state = reset_wait;
+	    break;
+	case inc:
+	    state = inc_wait;
+	    break;
+	case dec:
+	    state = dec_wait;
+	    break;
+	case reset:
+	    state = reset_wait;
+	    break;
 
-void TickSM(){
-	switch(state) {
-		case SM_Start:
-			state = zero;
-			break;
-		case zero:
-			state = one;
-			break;
-		case one:
-			state = two;
-			break;
-		case two:
-			state = zero;
-			break;
-		default:
-			state = SM_Start;
-			break;
-	}
+        default:
+	    state = smstart;
+	    break;
+    }
 
-	switch (state) {
-		case SM_Start:
-		case zero:
-			PORTB = 0x01;
-			break;
-		case one:
-			PORTB = 0x02;
-			break;
-		case two:
-			PORTB = 0x04;
-			break;
-		default:
-			break;
-	}
+    switch(state)
+    {
+        case smstart:
+	    PORTB = 0x07;
+	    break;
+        case wait:
+	    waitA0 = 0;
+	    waitA1 = 0;
+	    break;
+	case reset_wait:
+        case inc_wait:
+	    //++waitA0;
+	    //if (waitA0 > 10)
+		    //++actualB;
+	    //waitA0 = 0;
+	    //PORTB = actualB;
+	    break;
+        case dec_wait:
+	    //++waitA1;
+	    //if (waitA1 > 10)
+		    //--actualB;
+	    //waitA1 = 0;
+	    //PORTB = actualB;
+	    break;
+        case inc:
+	    waitA0 = 1;
+            actualB = actualB + 1;
+	    PORTB = actualB;
+            break;
+	case dec:
+	    waitA1 = 1;
+	    actualB = actualB - 1;
+	    PORTB = actualB;
+	    break;
+	case reset:
+	    PORTB = 0x00;
+	    break;
+        default:
+            break;
+    }
 }
 
 int main(void) {
     /* Insert DDR and PORT initializations */
+    DDRA = 0x00; // set portA to input
+    PORTA = 0xFF; // init port A to 1s
     DDRB = 0xFF; // set portB to output
     PORTB = 0x00; // init port B to 0s
-    TimerSet (1000);
+    TimerSet (100);
     TimerOn();
-    state = SM_Start;
+    state = smstart;
+    
     //unsigned char tmpB = 0x00;
     /* Insert your solution below */
     while (1) {
